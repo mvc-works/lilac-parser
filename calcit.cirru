@@ -1,14 +1,14 @@
 
-{} (:sessions $ {})
+{}
   :users $ {}
     |yeKFqj7rX $ {} (:name |chen) (:id |yeKFqj7rX) (:nickname |chen) (:avatar nil) (:password |d41d8cd98f00b204e9800998ecf8427e) (:theme :star-trail)
-  :ir $ {} (:package |app)
+  :ir $ {} (:package |liliac-parser)
     :files $ {}
-      |app.main $ {}
+      |lilac-parser.main $ {}
         :ns $ {} (:type :expr) (:by |yeKFqj7rX) (:at 1534483212338) (:id |WD4drWEfD9)
           :data $ {}
             |T $ {} (:type :leaf) (:by |yeKFqj7rX) (:at 1534483212338) (:text |ns) (:id |jeg5aDS4Wa)
-            |j $ {} (:type :leaf) (:by |yeKFqj7rX) (:at 1534483212338) (:text |app.main) (:id |Hvc4wCBXc4)
+            |j $ {} (:type :leaf) (:by |yeKFqj7rX) (:at 1534483212338) (:text |lilac-parser.main) (:id |Hvc4wCBXc4)
             |r $ {} (:type :expr) (:by |yeKFqj7rX) (:at 1534483679032) (:id |nGyImxkqpB)
               :data $ {}
                 |T $ {} (:type :leaf) (:by |yeKFqj7rX) (:at 1534483683346) (:text |:require) (:id |pV7hKeldu)
@@ -71,6 +71,4 @@
                 :data $ {}
                   |T $ {} (:type :leaf) (:by |yeKFqj7rX) (:at 1534483607910) (:text |get-page!) (:id |2Uk-oEu7q3leaf)
         :proc $ {} (:type :expr) (:by |yeKFqj7rX) (:at 1534483212338) (:id |mpzXR47-KZ) (:data $ {})
-  :saved-files $ {}
   :configs $ {} (:storage-key |calcit.cirru) (:local-storage-key |calcit-storage) (:extension |.cljs) (:output |src) (:port 6001)
-  :repl $ {} (:alive? false) (:logs $ {})

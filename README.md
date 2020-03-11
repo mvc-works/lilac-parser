@@ -1,25 +1,16 @@
 
-Caclit Node.js Workflow
+Lilac parser
 ----
+
+> A toy combinator parser with better failure reasons.
 
 ### Usage
 
-You need Node.js and JVM to run this app:
+_TODO_
 
-```bash
-yarn
-yarn watch
+### Workflow
 
-# meanwhile
-node target/server.js
-```
-
-To start the editor, use:
-
-```bash
-npm i -g calcit-editor
-calcit-editor # or ce for short
-```
+https://github.com/mvc-works/calcit-nodejs-workflow
 
 ### License
 

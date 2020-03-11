@@ -7,8 +7,8 @@
   ]
   :builds {
     :app {
-      :target :node-script, :output-to "target/server.js", :main app.main/main!
-      :devtools {:after-load app.main/reload!}
+      :target :node-script, :output-to "target/server.js", :main lilac-parser.main/main!
+      :devtools {:after-load lilac-parser.main/reload!}
     }
   }
 }

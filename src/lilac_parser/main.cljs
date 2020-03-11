@@ -1,5 +1,5 @@
 
-(ns app.main (:require [skir.client :as skir-client]))
+(ns lilac-parser.main (:require [skir.client :as skir-client]))
 
 (defn get-page! []
   (println "Start task...")
