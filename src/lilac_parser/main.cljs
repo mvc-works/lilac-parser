@@ -1,12 +1,6 @@
 
-(ns lilac-parser.main (:require [skir.client :as skir-client]))
+(ns lilac-parser.main (:require ))
 
-(defn get-page! []
-  (println "Start task...")
-  (skir-client/fetch!
-   "http://news.ycombinator.com/item?id=17533341"
-   (fn [response] (println response))))
+(defn main! [] (println "Started."))
 
-(defn main! [] (println "Started.") (get-page!))
-
-(defn reload! [] (.clear js/console) (println "Reloaded.") (get-page!))
+(defn reload! [] (.clear js/console) (println "Reloaded."))
