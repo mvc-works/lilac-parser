@@ -1,6 +1,6 @@
 {:version "0.0.1"
  :group-id "mvc-works"
- :artifact-id "nodejs-workflow"
+ :artifact-id "lilac-parser"
  :skip-tag true
- :description "Workflow"
- :scm-url "https://github.com/mvc-works/nodejs-workflow"}
+ :description "A toy combinator parser with more failure details"
+ :scm-url "https://github.com/mvc-works/lilac-parser"}

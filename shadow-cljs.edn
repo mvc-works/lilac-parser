@@ -1,8 +1,6 @@
 {
-  :source-paths ["src"]
+  :source-paths ["src" "macros"]
   :dependencies [
-    [mvc-works/skir "0.0.7"]
-    [respo/router "0.4.0"]
     [medley "1.3.0"]
   ]
   :builds {
