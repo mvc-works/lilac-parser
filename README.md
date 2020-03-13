@@ -10,7 +10,7 @@ _TODO_
 
 ### Workflow
 
-https://github.com/mvc-works/calcit-nodejs-workflow
+Workflow https://github.com/mvc-works/calcit-workflow
 
 ### License
 
