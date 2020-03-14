@@ -1,12 +1,12 @@
 {
-"name": "@mvc-works/lilac-parser",
+  "name": "@mvc-works/lilac-parser",
   "version": "0.1.0",
   "description": "Toy parser in cljs",
   "main": "index.js",
   "scripts": {
     "deploy": "clj -A:release",
     "m2": "clj -A:release install",
-    "watch": "shadow-cljs watch client server",
+    "watch": "shadow-cljs watch client",
     "serve": "http-server dist -s",
     "build-cdn": "shadow-cljs clj-run build.main/build-cdn",
     "build": "shadow-cljs clj-run build.main/build",
@@ -21,6 +21,7 @@
   "author": "jiyinyiyong",
   "license": "MIT",
   "devDependencies": {
+    "@mvc-works/codearea": "^0.0.1",
     "http-server": "^0.12.1",
     "shadow-cljs": "^2.8.92",
     "source-map-support": "^0.5.16",

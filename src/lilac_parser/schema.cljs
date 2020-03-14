@@ -1,4 +1,4 @@
 
 (ns lilac-parser.schema )
 
-(def store {:states {}, :content ""})
+(def store {:states {}})
