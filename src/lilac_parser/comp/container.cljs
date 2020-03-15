@@ -4,7 +4,7 @@
             [respo-ui.core :as ui]
             [respo.core
              :refer
-             [defcomp defeffect cursor-> <> div button textarea span input]]
+             [defcomp defeffect cursor-> list-> <> div button textarea span input]]
             [respo.comp.space :refer [=<]]
             [reel.comp.reel :refer [comp-reel]]
             [respo-md.comp.md :refer [comp-md]]
@@ -14,7 +14,83 @@
              [parse-lilac defparser is+ combine+ some+ many+ optional+ or+ one-of+ some+]]
             ["@mvc-works/codearea" :refer [codearea]]
             [clojure.string :as string]
-            [cirru-edn.core :as cirru-edn]))
+            [cirru-edn.core :as cirru-edn]
+            [feather.core :refer [comp-icon]]))
+
+(def style-label
+  {:font-family ui/font-code,
+   :color (hsl 0 0 100),
+   :display :inline-block,
+   :line-height "24px",
+   :padding "0 4px",
+   :border-radius "4px",
+   :margin-right 8,
+   :white-space :pre,
+   :min-height 14})
+
+(defcomp
+ comp-node
+ (states node)
+ (let [state (or (:data states) {:folded? false})
+       has-children? (or (some? (:result node))
+                         (some? (:peek-result node))
+                         (not (empty? (:results node))))]
+   (div
+    {:style (merge
+             ui/expand
+             {:padding 4,
+              :border-left (str "1px solid " (hsl 0 0 90)),
+              :border-top (str "1px solid " (hsl 0 0 90))})}
+    (div
+     {:style ui/row-middle}
+     (if has-children?
+       (comp-icon
+        (if (:folded? state) :play :chevron-down)
+        {:font-size 14,
+         :color (if (:folded? state) (hsl 200 80 40) (hsl 200 80 80)),
+         :margin 8,
+         :cursor :pointer}
+        (fn [e d! m!] (m! (update state :folded? not))))
+       (comp-icon
+        :minus
+        {:font-size 14, :color (hsl 200 80 90), :margin 8, :cursor :pointer}
+        (fn [e d! m!] )))
+     (if (:ok? node)
+       (<>
+        "OK"
+        (merge style-label {:background-color (hsl 200 80 70), :font-family ui/font-fancy}))
+       (<>
+        "Failure"
+        (merge style-label {:background-color (hsl 60 80 40), :font-family ui/font-fancy})))
+     (if-not (:ok? node)
+       (<>
+        (:message node)
+        (merge style-label {:background-color (hsl 0 80 60), :font-family ui/font-normal})))
+     (<> (:parser-node node) (merge style-label {:background-color (hsl 200 80 70)}))
+     (if (= :is (:parser-node node))
+       (<> (:value node) (merge style-label {:background-color (hsl 200 80 70)})))
+     (if (:ok? node)
+       (<>
+        (:value node)
+        (merge style-label {:background-color (hsl 200 80 80), :font-size 10})))
+     (<>
+      (->> (:rest node) (take 10) (string/join ""))
+      (merge style-label {:background-color (hsl 100 10 60), :font-size 10, :min-height 16})))
+    (if (and has-children? (not (:folded? state)))
+      (div
+       {}
+       (list->
+        {:style {:padding-left 16, :margin-top 8}}
+        (->> (or (:results node) (:previous-results node))
+             (map-indexed (fn [idx child] [idx (cursor-> idx comp-node states child)]))))
+       (if (some? (:result node))
+         (div
+          {:style {:padding-left 16, :margin-top 8}}
+          (cursor-> :result comp-node states (:result node))))
+       (if (some? (:peek-result node))
+         (div
+          {:style {:padding-left 16, :margin-top 8}}
+          (cursor-> :peek-result comp-node states (:peek-result node)))))))))
 
 (def number-parser (many+ (one-of+ (set (string/split "1234567890" "")))))
 
@@ -36,17 +112,27 @@
  (reel)
  (let [store (:store reel)
        states (:states store)
-       state (or (:data states) {:code "(def a (add 1 2))", :result nil})]
+       state (or (:data states) {:code "(def a (add 1 2))", :result nil, :gui? false})]
    (div
     {:style (merge ui/global ui/fullscreen ui/column)}
     (div
-     {:style {:padding 8}}
+     {:style (merge ui/row-middle {:padding 8})}
      (button
       {:style ui/button,
        :inner-text "Parse",
        :on-click (fn [e d! m!]
          (let [result (parse-lilac (string/split (:code state) "") (s-expr-parser+))]
-           (m! (assoc state :result result))))}))
+           (m! (assoc state :result result))))})
+     (=< 16 nil)
+     (span
+      {:inner-text "GUI",
+       :style {:font-family ui/font-fancy,
+               :color (if (:gui? state) (hsl 200 80 40) (hsl 200 80 80)),
+               :font-weight 300,
+               :font-size 20,
+               :cursor :pointer,
+               :line-height "24px"},
+       :on-click (fn [e d! m!] (m! (update state :gui? not)))}))
     (div
      {:style (merge ui/expand ui/row)}
      (textarea
@@ -55,13 +141,17 @@
        :placeholder "Content",
        :style (merge ui/textarea {:font-family ui/font-code, :width 300}),
        :on-input (fn [e d! m!] (m! (assoc state :code (:value e))))})
-     (textarea
-      {:style (merge
-               ui/expand
-               ui/textarea
-               {:font-family ui/font-code, :font-size 12, :white-space :nowrap}),
-       :spellcheck false,
-       :value (cirru-edn/write (:result state))}))
+     (if (:gui? state)
+       (div
+        {:style (merge ui/expand {:padding-bottom 600})}
+        (cursor-> :tree-viewer comp-node states (:result state)))
+       (textarea
+        {:style (merge
+                 ui/expand
+                 ui/textarea
+                 {:font-family ui/font-code, :font-size 12, :white-space :nowrap}),
+         :spellcheck false,
+         :value (cirru-edn/write (:result state))})))
     (when dev? (cursor-> :reel comp-reel states reel {})))))
 
 (defeffect
