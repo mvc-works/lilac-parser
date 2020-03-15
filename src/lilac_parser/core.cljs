@@ -41,14 +41,21 @@
 (defn parse-is [xs rule]
   (let [item (:item rule), strip-result (seq-strip-beginning xs (string/split item ""))]
     (if (:ok? strip-result)
-      (merge strip-result {:node :is, :value item, :result strip-result})
-      (assoc strip-result :node :is))))
+      {:ok? true,
+       :value item,
+       :rest (:rest strip-result),
+       :parser-node :is,
+       :result strip-result}
+      {:ok? false,
+       :message (str "failed to match " item " in " (take 10 xs) "...."),
+       :parser-node :is,
+       :result strip-result})))
 
 (defn parse-one-of [xs rule]
   (let [items (:items rule)]
     (if (contains? items (first xs))
-      {:ok? true, :value (first xs), :rest (rest xs)}
-      {:ok? false, :message "not in list", :value (first xs)})))
+      {:ok? true, :value (first xs), :rest (rest xs), :parser-node :one-of}
+      {:ok? false, :message "not in list", :parser-node :one-of})))
 
 (defn parse-some [xs0 rule]
   (let [item (:item rule)]
@@ -56,23 +63,31 @@
       (let [result (parse-lilac xs item)]
         (if (:ok? result)
           (recur (conj acc result) (:rest result))
-          {:ok? true, :node :some, :value (map :value acc), :rest xs})))))
+          {:ok? true, :value (map :value acc), :rest xs, :paser-node :some, :results acc})))))
 
 (defn parse-or [xs rule]
   (let [items (:items rule)]
     (loop [rules items, failures []]
-      (if (empty rules)
-        {:ok? false, :message "No more rules to try", :failures failures}
+      (if (empty? rules)
+        {:ok? false, :message "No more rules to try", :parser-node :or, :results failures}
         (let [result (parse-lilac xs (first rules))]
           (if (:ok? result)
-            (assoc result :node :or)
+            {:ok? true,
+             :value (:value result),
+             :rest (:rest result),
+             :parser-node :or,
+             :result result}
             (recur (rest rules) (conj failures result))))))))
 
 (defn parse-optional [xs rule]
   (let [item (:item rule), result (parse-lilac xs item)]
     (if (:ok? result)
-      (assoc result :node :optional)
-      {:ok? true, :node :optional, :value nil, :result result})))
+      {:ok? true,
+       :value (:value result),
+       :rest (:rest result),
+       :parser-node :optional,
+       :result result}
+      {:ok? true, :value nil, :result result, :parser-node :optional, :rest xs})))
 
 (defn parse-many [xs0 rule]
   (let [item (:item rule)]
@@ -81,8 +96,8 @@
         (if (:ok? result)
           (recur (conj acc result) (:rest result))
           (if (empty? acc)
-            {:ok? false, :message "zero match", :attempt result}
-            {:ok? true, :node :many, :value (map :value acc), :rest xs}))))))
+            {:ok? false, :message "no match in many", :parser-node :many, :result result}
+            {:ok? true, :value (map :value acc), :rest xs, :parser-node :many, :results acc}))))))
 
 (defn parse-lilac [xs rule]
   (assert (sequential? xs) "expected to parse from a sequence")
@@ -95,26 +110,42 @@
     :component (parse-component xs rule)
     :combine (parse-combine xs rule)
     :one-of (parse-one-of xs rule)
-    (do (println "Unknown node" rule) nil)))
+    (do (js/console.warn "Unknown node" rule) nil)))
 
 (defn parse-component [xs rule]
   (let [rule-name (:name rule)
         item (apply (:fn rule) (:args rule))
         result (parse-lilac xs item)
-        value-fn (:value-fn rule)]
+        value-fn (:value-fn rule)
+        blackbox? (:blackbox? rule)]
     (if (:ok? result)
-      {:ok? true, :node rule-name, :value (value-fn (:value result)), :result result}
-      {:ok? false, :node rule-name, :message "failed to parse component", :result result})))
+      {:ok? true,
+       :value (value-fn (:value result)),
+       :rest (:rest result),
+       :parser-node rule-name,
+       :result (if blackbox? nil result)}
+      {:ok? false,
+       :message "failed to parse component",
+       :parser-node rule-name,
+       :result (if blackbox? nil result)})))
 
 (defn parse-combine [xs0 rule]
   (let [items (:items rule)]
     (loop [acc [], xs xs0, ys items]
-      (if (empty? xs)
-        {:ok? true, :value (map :value acc), :results acc}
-        (let [result (parse-lilac xs (first ys))]
-          (if (:ok? result)
-            (recur (conj acc result) (:rest result) (rest ys))
-            {:ok? false, :result result}))))))
+      (cond
+        (and (empty? xs) (not (empty? ys)))
+          {:ok? false, :message "unexpected end of file", :parser-node :combine, :results acc}
+        (empty? ys)
+          {:ok? true, :value (map :value acc), :rest xs, :parser-node :combine, :results acc}
+        :else
+          (let [result (parse-lilac xs (first ys))]
+            (if (:ok? result)
+              (recur (conj acc result) (:rest result) (rest ys))
+              {:ok? false,
+               :parser-node :combine,
+               :message "not matched during combine",
+               :result result,
+               :previous-results acc}))))))
 
 (defn some+ [x] {:parser-node :some, :item x})
 
