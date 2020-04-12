@@ -4,7 +4,7 @@
             [respo-ui.core :as ui]
             [respo.core
              :refer
-             [defcomp defeffect cursor-> list-> <> div button textarea span input]]
+             [defcomp defeffect >> list-> <> div button textarea span input]]
             [respo.comp.space :refer [=<]]
             [reel.comp.reel :refer [comp-reel]]
             [respo-md.comp.md :refer [comp-md]]
@@ -31,7 +31,8 @@
 (defcomp
  comp-node
  (states node)
- (let [state (or (:data states) {:folded? false})
+ (let [cursor (:cursor states)
+       state (or (:data states) {:folded? false})
        has-children? (or (some? (:result node))
                          (some? (:peek-result node))
                          (not (empty? (:results node))))]
@@ -50,11 +51,11 @@
          :color (if (:folded? state) (hsl 200 80 40) (hsl 200 80 80)),
          :margin 8,
          :cursor :pointer}
-        (fn [e d! m!] (m! (update state :folded? not))))
+        (fn [e d!] (d! cursor (update state :folded? not))))
        (comp-icon
         :minus
         {:font-size 14, :color (hsl 200 80 90), :margin 8, :cursor :pointer}
-        (fn [e d! m!] )))
+        (fn [e d!] )))
      (if (:ok? node)
        (<>
         "OK"
@@ -82,15 +83,15 @@
        (list->
         {:style {:padding-left 16, :margin-top 8}}
         (->> (or (:results node) (:previous-results node))
-             (map-indexed (fn [idx child] [idx (cursor-> idx comp-node states child)]))))
+             (map-indexed (fn [idx child] [idx (comp-node (>> states idx) child)]))))
        (if (some? (:result node))
          (div
           {:style {:padding-left 16, :margin-top 8}}
-          (cursor-> :result comp-node states (:result node))))
+          (comp-node (>> states :result) (:result node))))
        (if (some? (:peek-result node))
          (div
           {:style {:padding-left 16, :margin-top 8}}
-          (cursor-> :peek-result comp-node states (:peek-result node)))))))))
+          (comp-node (>> states :peek-result) (:peek-result node)))))))))
 
 (def number-parser (many+ (one-of+ (set (string/split "1234567890" "")))))
 
@@ -112,6 +113,7 @@
  (reel)
  (let [store (:store reel)
        states (:states store)
+       cursor []
        state (or (:data states) {:code "(def a (add 1 2))", :result nil, :gui? false})]
    (div
     {:style (merge ui/global ui/fullscreen ui/column)}
@@ -120,9 +122,9 @@
      (button
       {:style ui/button,
        :inner-text "Parse",
-       :on-click (fn [e d! m!]
+       :on-click (fn [e d!]
          (let [result (parse-lilac (string/split (:code state) "") (s-expr-parser+))]
-           (m! (assoc state :result result))))})
+           (d! cursor (assoc state :result result))))})
      (=< 16 nil)
      (span
       {:inner-text "GUI",
@@ -132,7 +134,7 @@
                :font-size 20,
                :cursor :pointer,
                :line-height "24px"},
-       :on-click (fn [e d! m!] (m! (update state :gui? not)))}))
+       :on-click (fn [e d!] (d! cursor (update state :gui? not)))}))
     (div
      {:style (merge ui/expand ui/row)}
      (textarea
@@ -140,11 +142,11 @@
        :class-name "codearea",
        :placeholder "Content",
        :style (merge ui/textarea {:font-family ui/font-code, :width 300}),
-       :on-input (fn [e d! m!] (m! (assoc state :code (:value e))))})
+       :on-input (fn [e d!] (d! cursor (assoc state :code (:value e))))})
      (if (:gui? state)
        (div
         {:style (merge ui/expand {:padding-bottom 600})}
-        (cursor-> :tree-viewer comp-node states (:result state)))
+        (comp-node (>> states :tree-viewer) (:result state)))
        (textarea
         {:style (merge
                  ui/expand
@@ -152,7 +154,7 @@
                  {:font-family ui/font-code, :font-size 12, :white-space :nowrap}),
          :spellcheck false,
          :value (cirru-edn/write (:result state))})))
-    (when dev? (cursor-> :reel comp-reel states reel {})))))
+    (when dev? (comp-reel (>> states :reel) reel {})))))
 
 (defeffect
  effect-codearea
