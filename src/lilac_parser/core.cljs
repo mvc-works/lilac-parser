@@ -1,7 +1,11 @@
 
 (ns lilac-parser.core
   (:require-macros [lilac-parser.core])
-  (:require [clojure.string :as string] [cirru-edn.core :as cirru-edn]))
+  (:require [clojure.string :as string]
+            [cirru-edn.core :as cirru-edn]
+            [lilac-parser.config :refer [dev?]]))
+
+(declare parse-interleave)
 
 (declare parse-some)
 
@@ -21,15 +25,22 @@
 
 (defn indent+ [] {:parser-node :indent})
 
+(defn interleave+ [x y] {:parser-node :interleave, :x x, :y y})
+
 (defn is+ [x] {:parser-node :is, :item x})
 
 (defn many+ [item] {:parser-node :many, :item item})
 
-(defn one-of+ [xs] {:parser-node :one-of, :items xs})
+(defn one-of+ [xs]
+  (when (and dev? (not (or (string? xs) (set? xs))))
+    (println "Unexpected argument passed to one-of+ :" xs))
+  {:parser-node :one-of, :items xs})
 
 (defn optional+ [x] {:parser-node :optional, :item x})
 
-(defn or+ [xs] {:parser-node :or, :items xs})
+(defn or+ [xs]
+  (when (and dev? (not (sequential? xs))) (println "Expected argument passed to or+ :" xs))
+  {:parser-node :or, :items xs})
 
 (defn seq-strip-beginning [xs ys]
   (cond
@@ -49,7 +60,7 @@
 
 (defn parse-one-of [xs rule]
   (let [items (:items rule)]
-    (if (contains? items (first xs))
+    (if (if (string? items) (string/includes? items (first xs)) (contains? items (first xs)))
       {:ok? true, :value (first xs), :rest (rest xs), :parser-node :one-of}
       {:ok? false, :message "not in list", :parser-node :one-of, :rest xs})))
 
@@ -124,7 +135,27 @@
     :component (parse-component xs rule)
     :combine (parse-combine xs rule)
     :one-of (parse-one-of xs rule)
+    :interleave (parse-interleave xs rule)
     (do (js/console.warn "Unknown node" rule) nil)))
+
+(defn parse-interleave [xs0 rule]
+  (let [x0 (:x rule), y0 (:y rule)]
+    (loop [acc [], xs xs0, x x0, y y0]
+      (let [result (parse-lilac xs x)]
+        (if (:ok? result)
+          (recur (conj acc result) (:rest result) y x)
+          (if (empty? acc)
+            {:ok? false,
+             :message "no match in interleave",
+             :parser-node :interleave,
+             :peek-result result,
+             :rest xs}
+            {:ok? true,
+             :value (map :value acc),
+             :rest xs,
+             :parser-node :interleave,
+             :results acc,
+             :peek-result result}))))))
 
 (defn parse-component [xs rule]
   (let [rule-name (:name rule)

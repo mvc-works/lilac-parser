@@ -15,7 +15,9 @@
             ["@mvc-works/codearea" :refer [codearea]]
             [clojure.string :as string]
             [cirru-edn.core :as cirru-edn]
-            [feather.core :refer [comp-icon]]))
+            [feather.core :refer [comp-icon]]
+            [lilac-parser.demo.s-expr :refer [s-expr-parser+]]
+            [lilac-parser.demo.json :refer [demo-parser]]))
 
 (def style-label
   {:font-family ui/font-code,
@@ -93,21 +95,6 @@
           {:style {:padding-left 16, :margin-top 8}}
           (comp-node (>> states :peek-result) (:peek-result node)))))))))
 
-(def number-parser (many+ (one-of+ (set (string/split "1234567890" "")))))
-
-(def space-parser (is+ " "))
-
-(def word-parser (many+ (one-of+ (set (string/split "qwertyuiopasdfghjklzxcvbnm" "")))))
-
-(defparser
- s-expr-parser+
- ()
- identity
- (combine+
-  [(is+ "(")
-   (some+ (or+ [number-parser word-parser space-parser (s-expr-parser+)]))
-   (is+ ")")]))
-
 (defcomp
  comp-container
  (reel)
@@ -123,7 +110,8 @@
       {:style ui/button,
        :inner-text "Parse",
        :on-click (fn [e d!]
-         (let [result (parse-lilac (string/split (:code state) "") (s-expr-parser+))]
+         (let [result (parse-lilac (string/split (:code state) "") (s-expr-parser+))
+               r1 (parse-lilac (string/split (:code state) "") demo-parser)]
            (d! cursor (assoc state :result result))))})
      (=< 16 nil)
      (span
