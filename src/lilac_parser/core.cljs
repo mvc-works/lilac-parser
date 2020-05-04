@@ -42,6 +42,11 @@
   (when (and dev? (not (sequential? xs))) (println "Expected argument passed to or+ :" xs))
   {:parser-node :or, :items xs})
 
+(defn other-than+ [items]
+  (when (and dev? (not (or (string? items) (set? items))))
+    (println "Unexpected parameter passed to other-than+ :" items))
+  {:parser-node :other-than, :items items})
+
 (defn seq-strip-beginning [xs ys]
   (cond
     (empty? ys) {:ok? true, :rest xs}
@@ -63,6 +68,20 @@
     (if (if (string? items) (string/includes? items (first xs)) (contains? items (first xs)))
       {:ok? true, :value (first xs), :rest (rest xs), :parser-node :one-of}
       {:ok? false, :message "not in list", :parser-node :one-of, :rest xs})))
+
+(defn parse-other-than [xs rule]
+  (if (empty? xs)
+    {:ok? false,
+     :message "Unexpected EOF in other-than+ rule",
+     :parser-node :other-than,
+     :rest xs}
+    (let [items (:items rule), x0 (first xs)]
+      (if (if (string? items) (string/includes? items x0) (contains? items x0))
+        {:ok? false,
+         :message (str (pr-str x0) "is in not expected item in other-than+"),
+         :parser-node :other-than,
+         :rest xs}
+        {:ok? true, :value x0, :rest (rest xs), :parser-node :other-than}))))
 
 (defn parse-some [xs0 rule]
   (let [item (:item rule)]
@@ -136,6 +155,7 @@
     :combine (parse-combine xs rule)
     :one-of (parse-one-of xs rule)
     :interleave (parse-interleave xs rule)
+    :other-than (parse-other-than xs rule)
     (do (js/console.warn "Unknown node" rule) nil)))
 
 (defn parse-interleave [xs0 rule]

@@ -17,7 +17,9 @@
             [cirru-edn.core :as cirru-edn]
             [feather.core :refer [comp-icon]]
             [lilac-parser.demo.s-expr :refer [s-expr-parser+]]
-            [lilac-parser.demo.json :refer [demo-parser]]))
+            [lilac-parser.demo.json
+             :refer
+             [demo-parser number-parser string-parser array-parser+ value-parser+]]))
 
 (def style-label
   {:font-family ui/font-code,
@@ -111,8 +113,8 @@
        :inner-text "Parse",
        :on-click (fn [e d!]
          (let [result (parse-lilac (string/split (:code state) "") (s-expr-parser+))
-               r1 (parse-lilac (string/split (:code state) "") demo-parser)]
-           (d! cursor (assoc state :result result))))})
+               r1 (parse-lilac (string/split (:code state) "") (value-parser+))]
+           (d! cursor (assoc state :result r1))))})
      (=< 16 nil)
      (span
       {:inner-text "GUI",
