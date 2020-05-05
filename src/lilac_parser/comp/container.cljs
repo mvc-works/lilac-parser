@@ -76,7 +76,7 @@
        (<> (:value node) (merge style-label {:background-color (hsl 200 80 70)})))
      (if (:ok? node)
        (<>
-        (:value node)
+        (pr-str (:value node))
         (merge style-label {:background-color (hsl 200 80 80), :font-size 10})))
      (<>
       (->> (:rest node) (take 10) (string/join ""))
