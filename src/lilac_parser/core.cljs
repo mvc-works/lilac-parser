@@ -263,12 +263,6 @@
   (let [items (:items rule), transform (:transform rule)]
     (loop [acc [], xs xs0, ys items]
       (cond
-        (and (empty? xs) (not (empty? ys)))
-          {:ok? false,
-           :message "unexpected EOF",
-           :parser-node :combine,
-           :results acc,
-           :rest xs}
         (empty? ys)
           {:ok? true,
            :value (let [v (map :value acc)] (if (some? transform) (transform v) v)),
