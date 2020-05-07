@@ -25,12 +25,13 @@
   {:font-family ui/font-code,
    :color (hsl 0 0 100),
    :display :inline-block,
-   :line-height "24px",
+   :line-height "22px",
    :padding "0 4px",
    :border-radius "4px",
    :margin-right 8,
    :white-space :pre,
-   :min-height 14})
+   :min-height 14,
+   :font-size 13})
 
 (defcomp
  comp-node
@@ -62,17 +63,19 @@
         (fn [e d!] )))
      (if (:ok? node)
        (<>
-        "OK"
+        "Ok"
         (merge style-label {:background-color (hsl 200 80 70), :font-family ui/font-fancy}))
        (<>
-        "Failure"
-        (merge style-label {:background-color (hsl 60 80 40), :font-family ui/font-fancy})))
+        "Fail"
+        (merge style-label {:background-color (hsl 20 80 50), :font-family ui/font-fancy})))
+     (<>
+      (name (:parser-node node))
+      (merge style-label {:background-color (hsl 200 80 76), :font-family ui/font-fancy}))
+     (if (or (= :label (:parser-node node)) (= :component (:parser-node node)))
+       (<> (:label node) (merge style-label {:background-color (hsl 200 90 60)})))
      (if-not (:ok? node)
-       (<>
-        (:message node)
-        (merge style-label {:background-color (hsl 0 80 60), :font-family ui/font-normal})))
-     (<> (:parser-node node) (merge style-label {:background-color (hsl 200 80 70)}))
-     (if (= :is (:parser-node node))
+       (<> (:message node) (merge style-label {:background-color (hsl 0 80 60)})))
+     (if (and (:ok? node) (= :is (:parser-node node)))
        (<> (:value node) (merge style-label {:background-color (hsl 200 80 70)})))
      (if (:ok? node)
        (<>
@@ -80,7 +83,7 @@
         (merge style-label {:background-color (hsl 200 80 80), :font-size 10})))
      (<>
       (->> (:rest node) (take 10) (string/join ""))
-      (merge style-label {:background-color (hsl 100 10 60), :font-size 10, :min-height 16})))
+      (merge style-label {:background-color (hsl 100 10 70), :font-size 10, :min-height 16})))
     (if (and has-children? (not (:folded? state)))
       (div
        {}
@@ -135,7 +138,7 @@
        :on-input (fn [e d!] (d! cursor (assoc state :code (:value e))))})
      (if (:gui? state)
        (div
-        {:style (merge ui/expand {:padding-bottom 600})}
+        {:style (merge ui/expand {:padding-bottom 400})}
         (comp-node (>> states :tree-viewer) (:result state)))
        (textarea
         {:style (merge

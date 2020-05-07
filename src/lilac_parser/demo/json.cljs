@@ -11,7 +11,8 @@
               one-of+
               some+
               or+
-              defparser]]
+              defparser
+              label+]]
             [clojure.string :as string]))
 
 (declare value-parser+)
@@ -21,29 +22,34 @@
 (declare object-parser+)
 
 (def boolean-parser
-  (or+ [(is+ "true") (is+ "false")] (fn [x] (if (= x "true") true false))))
+  (label+ "boolean" (or+ [(is+ "true") (is+ "false")] (fn [x] (if (= x "true") true false)))))
 
 (def space-parser (some+ (is+ " ") (fn [x] nil)))
 
-(def comma-parser (combine+ [space-parser (is+ ",") space-parser] (fn [x] nil)))
+(def comma-parser
+  (label+ "comma" (combine+ [space-parser (is+ ",") space-parser] (fn [x] nil))))
 
 (def digit-parser (one-of+ "1234567890"))
 
-(def nil-parser (or+ [(is+ "null") (is+ "undefined")] (fn [x] nil)))
+(def nil-parser (label+ "nil" (or+ [(is+ "null") (is+ "undefined")] (fn [x] nil))))
 
 (def number-parser
-  (combine+
-   [(optional+ (is+ "-"))
-    (many+ digit-parser)
-    (optional+ (combine+ [(is+ ".") (many+ digit-parser)]))]
-   (fn [xs] (js/Number (string/join "" (nth xs 1))))))
+  (label+
+   "number"
+   (combine+
+    [(optional+ (is+ "-"))
+     (many+ digit-parser)
+     (optional+ (combine+ [(is+ ".") (many+ digit-parser)]))]
+    (fn [xs] (js/Number (string/join "" (nth xs 1)))))))
 
 (def string-parser
-  (combine+
-   [(is+ "\"")
-    (some+ (or+ [(other-than+ "\"\\") (is+ "\\\"") (is+ "\\\\") (is+ "\\n")]))
-    (is+ "\"")]
-   (fn [xs] (string/join "" (nth xs 1)))))
+  (label+
+   "string"
+   (combine+
+    [(is+ "\"")
+     (some+ (or+ [(other-than+ "\"\\") (is+ "\\\"") (is+ "\\\\") (is+ "\\n")]))
+     (is+ "\"")]
+    (fn [xs] (string/join "" (nth xs 1))))))
 
 (defparser
  value-parser+

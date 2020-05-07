@@ -4,19 +4,19 @@ Lilac parser
 
 > A toy combinator parser with better failure reasons.
 
-Demo of `(def a (add 1 2))` or `{"json": [1, 2]` http://repo.mvc-works.org/lilac-parser/
+Demo of `(def a (add 1 2))` or `{"json": [1, 2]}` http://repo.mvc-works.org/lilac-parser/
 
 ### Usage
 
 [![Clojars Project](https://img.shields.io/clojars/v/mvc-works/lilac-parser.svg)](https://clojars.org/mvc-works/lilac-parser)
 
 ```edn
-[mvc-works/lilac-parser "0.0.2-a2"]
+[mvc-works/lilac-parser "0.0.2-a3"]
 ```
 
 ```clojure
 (require '[lilac-parser.core :refer
-            [parse-lilac defparser is+ many+ one-of+ some+ combine+ interleave+ other-than+]])
+            [parse-lilac defparser is+ many+ one-of+ some+ combine+ interleave+ other-than+ label+]])
 
 (parse-lilac "aaaa" (many+ (is+ "a")))
 ```

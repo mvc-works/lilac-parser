@@ -5,6 +5,8 @@
             [cirru-edn.core :as cirru-edn]
             [lilac-parser.config :refer [dev?]]))
 
+(declare parse-label)
+
 (declare parse-interleave)
 
 (declare parse-some)
@@ -36,6 +38,8 @@
 (defn is+
   ([x] (is+ x identity))
   ([x transform] {:parser-node :is, :item x, :transform transform}))
+
+(defn label+ [label item] {:parser-node :label, :label label, :item item})
 
 (defn many+ [item] {:parser-node :many, :item item})
 
@@ -80,7 +84,11 @@
        :rest (:rest strip-result),
        :parser-node :is}
       {:ok? false,
-       :message (str "failed to match " item " in " (take 10 xs) "...."),
+       :message (str
+                 "expects "
+                 (pr-str item)
+                 " but got "
+                 (pr-str (string/join "" (take (count item) xs)))),
        :parser-node :is,
        :rest xs})))
 
@@ -91,7 +99,13 @@
        :value (let [v (first xs)] (if (some? transform) (transform v) v)),
        :rest (rest xs),
        :parser-node :one-of}
-      {:ok? false, :message "not in list", :parser-node :one-of, :rest xs})))
+      {:ok? false,
+       :message (str
+                 (pr-str (first xs))
+                 " is not in "
+                 (pr-str (if (string? items) items (string/join "" items)))),
+       :parser-node :one-of,
+       :rest xs})))
 
 (defn parse-other-than [xs rule]
   (if (empty? xs)
@@ -102,7 +116,11 @@
     (let [items (:items rule), transform (:transform rule), x0 (first xs)]
       (if (if (string? items) (string/includes? items x0) (contains? items x0))
         {:ok? false,
-         :message (str (pr-str x0) "is in not expected item in other-than+"),
+         :message (str
+                   (pr-str x0)
+                   " among "
+                   (pr-str (if (string? items) items (string/join "" items)))
+                   " is invalid"),
          :parser-node :other-than,
          :rest xs}
         {:ok? true,
@@ -128,7 +146,7 @@
     (loop [rules items, failures []]
       (if (empty? rules)
         {:ok? false,
-         :message "No more rules to try",
+         :message (str "all " (count items) " rules missed"),
          :parser-node :or,
          :results failures,
          :rest xs}
@@ -159,7 +177,7 @@
           (recur (conj acc result) (:rest result))
           (if (empty? acc)
             {:ok? false,
-             :message "no match in many",
+             :message "no match",
              :parser-node :many,
              :peek-result result,
              :rest xs}
@@ -183,7 +201,24 @@
     :one-of (parse-one-of xs rule)
     :interleave (parse-interleave xs rule)
     :other-than (parse-other-than xs rule)
+    :label (parse-label xs rule)
     (do (js/console.warn "Unknown node" rule) nil)))
+
+(defn parse-label [xs rule]
+  (let [result (parse-lilac xs (:item rule))]
+    (if (:ok? result)
+      {:ok? true,
+       :parser-node :label,
+       :label (:label rule),
+       :value (:value result),
+       :rest (:rest result),
+       :result result}
+      {:ok? false,
+       :message nil,
+       :parser-node :label,
+       :label (:label rule),
+       :result result,
+       :rest (:rest result)})))
 
 (defn parse-interleave [xs0 rule]
   (let [x0 (:x rule), y0 (:y rule), transform (:transform rule)]
@@ -193,7 +228,7 @@
           (recur (conj acc result) (:rest result) y x)
           (if (empty? acc)
             {:ok? false,
-             :message "no match in interleave",
+             :message "no match",
              :parser-node :interleave,
              :peek-result result,
              :rest xs}
@@ -214,11 +249,13 @@
       {:ok? true,
        :value (value-fn (:value result)),
        :rest (:rest result),
-       :parser-node rule-name,
+       :parser-node :component,
+       :label rule-name,
        :result (if blackbox? nil result)}
       {:ok? false,
-       :message "failed to parse component",
-       :parser-node rule-name,
+       :message "failed branch",
+       :parser-node :component,
+       :label rule-name,
        :result (if blackbox? nil result),
        :rest xs})))
 
@@ -228,7 +265,7 @@
       (cond
         (and (empty? xs) (not (empty? ys)))
           {:ok? false,
-           :message "unexpected end of file",
+           :message "unexpected EOF",
            :parser-node :combine,
            :results acc,
            :rest xs}
@@ -244,7 +281,7 @@
               (recur (conj acc result) (:rest result) (rest ys))
               {:ok? false,
                :parser-node :combine,
-               :message "not matched during combine",
+               :message "failed to combine",
                :result result,
                :previous-results acc,
                :rest xs}))))))
