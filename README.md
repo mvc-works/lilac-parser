@@ -43,6 +43,8 @@ Demo of a stupid S-expression parser:
 (parse-lilac (string/split "(def a (add 1 2))" "") (s-expr-parser+))
 ```
 
+[More demos](https://github.com/mvc-works/lilac-parser/tree/master/src/lilac_parser/demo).
+
 ### Rules
 
 | Rule          | Example                                         | Description                                |
