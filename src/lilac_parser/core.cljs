@@ -75,44 +75,47 @@
     :else {:ok? false, :message "not matching", :xs xs, :ys ys}))
 
 (defn parse-is [xs rule]
-  (let [item (:item rule)
-        transform (:transform rule)
-        strip-result (seq-strip-beginning xs (string/split item ""))]
-    (if (:ok? strip-result)
-      {:ok? true,
-       :value (if (some? transform) (transform item) item),
-       :rest (:rest strip-result),
-       :parser-node :is}
-      {:ok? false,
-       :message (str
-                 "expects "
-                 (pr-str item)
-                 " but got "
-                 (pr-str (string/join "" (take (count item) xs)))),
-       :parser-node :is,
-       :rest xs})))
+  (if (empty? xs)
+    {:ok? false, :message "unexpected EOF", :parser-node :is, :rest xs}
+    (let [item (:item rule)
+          transform (:transform rule)
+          strip-result (seq-strip-beginning xs (string/split item ""))]
+      (if (:ok? strip-result)
+        {:ok? true,
+         :value (if (some? transform) (transform item) item),
+         :rest (:rest strip-result),
+         :parser-node :is}
+        {:ok? false,
+         :message (str
+                   "expects "
+                   (pr-str item)
+                   " but got "
+                   (pr-str (string/join "" (take (count item) xs)))),
+         :parser-node :is,
+         :rest xs}))))
 
 (defn parse-one-of [xs rule]
-  (let [items (:items rule), transform (:transform rule)]
-    (if (if (string? items) (string/includes? items (first xs)) (contains? items (first xs)))
-      {:ok? true,
-       :value (let [v (first xs)] (if (some? transform) (transform v) v)),
-       :rest (rest xs),
-       :parser-node :one-of}
-      {:ok? false,
-       :message (str
-                 (pr-str (first xs))
-                 " is not in "
-                 (pr-str (if (string? items) items (string/join "" items)))),
-       :parser-node :one-of,
-       :rest xs})))
+  (if (empty? xs)
+    {:ok? false, :message "unexpected EOF", :parser-node :one-of, :rest xs}
+    (let [items (:items rule), transform (:transform rule)]
+      (if (if (string? items)
+        (string/includes? items (first xs))
+        (contains? items (first xs)))
+        {:ok? true,
+         :value (let [v (first xs)] (if (some? transform) (transform v) v)),
+         :rest (rest xs),
+         :parser-node :one-of}
+        {:ok? false,
+         :message (str
+                   (pr-str (first xs))
+                   " is not in "
+                   (pr-str (if (string? items) items (string/join "" items)))),
+         :parser-node :one-of,
+         :rest xs}))))
 
 (defn parse-other-than [xs rule]
   (if (empty? xs)
-    {:ok? false,
-     :message "Unexpected EOF in other-than+ rule",
-     :parser-node :other-than,
-     :rest xs}
+    {:ok? false, :message "Unexpected EOF", :parser-node :other-than, :rest xs}
     (let [items (:items rule), transform (:transform rule), x0 (first xs)]
       (if (if (string? items) (string/includes? items x0) (contains? items x0))
         {:ok? false,
