@@ -24,12 +24,12 @@
 (def boolean-parser
   (label+ "boolean" (or+ [(is+ "true") (is+ "false")] (fn [x] (if (= x "true") true false)))))
 
-(def space-parser (some+ (is+ " ") (fn [x] nil)))
+(def space-parser (label+ "space" (some+ (is+ " ") (fn [x] nil))))
 
 (def comma-parser
   (label+ "comma" (combine+ [space-parser (is+ ",") space-parser] (fn [x] nil))))
 
-(def digit-parser (one-of+ "1234567890"))
+(def digits-parser (many+ (one-of+ "0123456789") (fn [xs] (string/join "" xs))))
 
 (def nil-parser (label+ "nil" (or+ [(is+ "null") (is+ "undefined")] (fn [x] nil))))
 
@@ -38,9 +38,9 @@
    "number"
    (combine+
     [(optional+ (is+ "-"))
-     (many+ digit-parser)
-     (optional+ (combine+ [(is+ ".") (many+ digit-parser)]))]
-    (fn [xs] (js/Number (string/join "" (nth xs 1)))))))
+     digits-parser
+     (optional+ (combine+ [(is+ ".") digits-parser] (fn [xs] (string/join "" xs))))]
+    (fn [xs] (js/Number (string/join "" xs))))))
 
 (def string-parser
   (label+

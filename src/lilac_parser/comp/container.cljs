@@ -4,7 +4,7 @@
             [respo-ui.core :as ui]
             [respo.core
              :refer
-             [defcomp defeffect >> list-> <> div button textarea span input]]
+             [defcomp defeffect >> list-> <> div button textarea span input a]]
             [respo.comp.space :refer [=<]]
             [reel.comp.reel :refer [comp-reel]]
             [respo-md.comp.md :refer [comp-md]]
@@ -19,7 +19,15 @@
             [lilac-parser.demo.s-expr :refer [s-expr-parser+]]
             [lilac-parser.demo.json
              :refer
-             [demo-parser number-parser string-parser array-parser+ value-parser+]]))
+             [demo-parser
+              number-parser
+              string-parser
+              array-parser+
+              value-parser+
+              boolean-parser]]
+            [respo-alerts.core :refer [use-prompt]]
+            [cljs.reader :refer [read-string]]
+            [favored-edn.core :refer [write-edn]]))
 
 (def style-label
   {:font-family ui/font-code,
@@ -106,7 +114,22 @@
  (let [store (:store reel)
        states (:states store)
        cursor []
-       state (or (:data states) {:code "(def a (add 1 2))", :result nil, :gui? false})]
+       state (or (:data states) {:code "(def a (add 1 2))", :result nil, :gui? false})
+       load-plugin (use-prompt
+                    (>> states :load)
+                    {:text "Load EDN",
+                     :multiline? true,
+                     :placeholder "lilac-parser parsing rule...",
+                     :input-style {:font-family ui/font-code,
+                                   :height 400,
+                                   :white-space :pre,
+                                   :font-size 12,
+                                   :line-height "18px"},
+                     :initial (write-edn (:result state) {:indent 2}),
+                     :validator (fn [x]
+                       (try
+                        (do (read-string x) nil)
+                        (catch js/Error e (js/console.log "Failed to parse") e)))})]
    (div
     {:style (merge ui/global ui/fullscreen ui/column)}
     (div
@@ -127,7 +150,17 @@
                :font-size 20,
                :cursor :pointer,
                :line-height "24px"},
-       :on-click (fn [e d!] (d! cursor (update state :gui? not)))}))
+       :on-click (fn [e d!] (d! cursor (update state :gui? not)))})
+     (=< 16 nil)
+     (a
+      {:inner-text "Load EDN",
+       :style ui/link,
+       :on-click (fn [e d!]
+         ((:show load-plugin)
+          d!
+          (fn [text]
+            (println "text" (read-string text))
+            (d! cursor (assoc state :result (read-string text))))))}))
     (div
      {:style (merge ui/expand ui/row)}
      (textarea
@@ -144,10 +177,12 @@
         {:style (merge
                  ui/expand
                  ui/textarea
-                 {:font-family ui/font-code, :font-size 12, :white-space :nowrap}),
+                 {:font-family ui/font-code, :font-size 12, :white-space :pre}),
+         :disabled true,
          :spellcheck false,
          :value (cirru-edn/write (:result state))})))
-    (when dev? (comp-reel (>> states :reel) reel {})))))
+    (when dev? (comp-reel (>> states :reel) reel {}))
+    (:ui load-plugin))))
 
 (defeffect
  effect-codearea

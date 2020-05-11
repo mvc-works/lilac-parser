@@ -41,7 +41,9 @@
 
 (defn label+ [label item] {:parser-node :label, :label label, :item item})
 
-(defn many+ [item] {:parser-node :many, :item item})
+(defn many+
+  ([item] (many+ item nil))
+  ([item transform] {:parser-node :many, :item item, :transform transform}))
 
 (defn one-of+
   ([xs] (one-of+ xs identity))
@@ -76,7 +78,10 @@
 
 (defn parse-is [xs rule]
   (if (empty? xs)
-    {:ok? false, :message "unexpected EOF", :parser-node :is, :rest xs}
+    {:ok? false,
+     :message (str "expects " (pr-str (:item rule)) " but got EOF"),
+     :parser-node :is,
+     :rest xs}
     (let [item (:item rule)
           transform (:transform rule)
           strip-result (seq-strip-beginning xs (string/split item ""))]
@@ -159,6 +164,7 @@
              :value (let [v (:value result)] (if (some? transform) (transform v) v)),
              :rest (:rest result),
              :parser-node :or,
+             :results failures,
              :result result}
             (recur (rest rules) (conj failures result))))))))
 
