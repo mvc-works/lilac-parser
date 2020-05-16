@@ -40,5 +40,11 @@
       :target :node-script, :output-to "target/page.js", :main lilac-parser.page/main!
       :devtools {:after-load lilac-parser.page/main!}
     }
+    :test {
+      :target :node-test, :output-to "target/test.js", :ns-regexp "test$", :autorun true
+    }
+    :test-only {
+      :target :node-test, :output-to "target/test.js", :ns-regexp "test$"
+    }
   }
 }
