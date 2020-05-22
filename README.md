@@ -136,6 +136,21 @@ lilac-parser would be pretter slow since it tries to store all information durin
 </code></pre>
 </details>
 
+### Custom Rule
+
+Parser rules can be expected by injecting functions. It could be quite tricky and is not recommended:
+
+```clojure
+(lilac-parser.core/resigter-custom-rule! :xyz
+  (fn [xs rule]
+    ; TODO
+    ))
+
+(defn xyz+ [xs transform]
+  ; TODO
+  )
+```
+
 ### Workflow
 
 Workflow https://github.com/mvc-works/calcit-workflow
