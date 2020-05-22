@@ -3,9 +3,12 @@
   (:require-macros [lilac-parser.core])
   (:require [clojure.string :as string]
             [cirru-edn.core :as cirru-edn]
-            [lilac-parser.config :refer [dev?]]))
+            [lilac-parser.config :refer [dev?]]
+            [lilac-parser.util :refer [seq-strip-beginning]]))
 
 (declare parse-label)
+
+(declare core-methods)
 
 (declare parse-interleave)
 
@@ -23,58 +26,11 @@
 
 (declare parse-combine)
 
+(defonce *custom-methods (atom {}))
+
 (defn combine+
   ([xs] (combine+ xs identity))
   ([xs transform] {:parser-node :combine, :items xs, :transform transform}))
-
-(defn indent+
-  ([] (indent+ identity))
-  ([transform] {:parser-node :indent, :transform transform}))
-
-(defn interleave+
-  ([x y] (interleave+ x y identity))
-  ([x y transform] {:parser-node :interleave, :x x, :y y, :transform transform}))
-
-(defn is+
-  ([x] (is+ x identity))
-  ([x transform] {:parser-node :is, :item x, :transform transform}))
-
-(defn label+ [label item] {:parser-node :label, :label label, :item item})
-
-(defn many+
-  ([item] (many+ item nil))
-  ([item transform] {:parser-node :many, :item item, :transform transform}))
-
-(defn one-of+
-  ([xs] (one-of+ xs identity))
-  ([xs transform]
-   (when (and dev? (not (or (string? xs) (set? xs))))
-     (println "Unexpected argument passed to one-of+ :" xs))
-   {:parser-node :one-of, :items xs, :transform transform}))
-
-(defn optional+
-  ([x] (optional+ x identity))
-  ([x transform] {:parser-node :optional, :item x, :transform transform}))
-
-(defn or+
-  ([xs] (or+ xs identity))
-  ([xs transform]
-   (when (and dev? (not (sequential? xs))) (println "Expected argument passed to or+ :" xs))
-   {:parser-node :or, :items xs, :transform transform}))
-
-(defn other-than+
-  ([items] (other-than+ items identity))
-  ([items transform]
-   (when (and dev? (not (or (string? items) (set? items))))
-     (println "Unexpected parameter passed to other-than+ :" items))
-   {:parser-node :other-than, :items items, :transform transform}))
-
-(defn seq-strip-beginning [xs ys]
-  (cond
-    (empty? ys) {:ok? true, :rest xs}
-    (empty? xs) {:ok? false, :rest nil, :reason {:message "xs ends", :ys ys}}
-    (= (first xs) (first ys)) (recur (rest xs) (rest ys))
-    :else {:ok? false, :message "not matching", :xs xs, :ys ys}))
 
 (defn parse-is [xs rule]
   (if (empty? xs)
@@ -199,19 +155,13 @@
 
 (defn parse-lilac [xs rule]
   (assert (sequential? xs) "expected to parse from a sequence")
-  (case (:parser-node rule)
-    :is (parse-is xs rule)
-    :or (parse-or xs rule)
-    :many (parse-many xs rule)
-    :some (parse-some xs rule)
-    :optional (parse-optional xs rule)
-    :component (parse-component xs rule)
-    :combine (parse-combine xs rule)
-    :one-of (parse-one-of xs rule)
-    :interleave (parse-interleave xs rule)
-    :other-than (parse-other-than xs rule)
-    :label (parse-label xs rule)
-    (do (js/console.warn "Unknown node" rule) nil)))
+  (let [node (:parser-node rule)
+        method (get core-methods node)
+        user-method (get @*custom-methods node)]
+    (cond
+      (fn? method) (method xs rule)
+      (fn? user-method) (user-method xs rule)
+      :else (do (js/console.warn "Unknown node" rule) nil))))
 
 (defn parse-label [xs rule]
   (let [result (parse-lilac xs (:item rule))]
@@ -288,6 +238,67 @@
                :result result,
                :previous-results acc,
                :rest xs}))))))
+
+(def core-methods
+  {:is parse-is,
+   :or parse-or,
+   :many parse-many,
+   :some parse-some,
+   :optional parse-optional,
+   :component parse-component,
+   :combine parse-combine,
+   :one-of parse-one-of,
+   :interleave parse-interleave,
+   :other-than parse-other-than,
+   :label parse-label})
+
+(defn indent+
+  ([] (indent+ identity))
+  ([transform] {:parser-node :indent, :transform transform}))
+
+(defn interleave+
+  ([x y] (interleave+ x y identity))
+  ([x y transform] {:parser-node :interleave, :x x, :y y, :transform transform}))
+
+(defn is+
+  ([x] (is+ x identity))
+  ([x transform] {:parser-node :is, :item x, :transform transform}))
+
+(defn label+ [label item] {:parser-node :label, :label label, :item item})
+
+(defn many+
+  ([item] (many+ item nil))
+  ([item transform] {:parser-node :many, :item item, :transform transform}))
+
+(defn one-of+
+  ([xs] (one-of+ xs identity))
+  ([xs transform]
+   (when (and dev? (not (or (string? xs) (set? xs))))
+     (println "Unexpected argument passed to one-of+ :" xs))
+   {:parser-node :one-of, :items xs, :transform transform}))
+
+(defn optional+
+  ([x] (optional+ x identity))
+  ([x transform] {:parser-node :optional, :item x, :transform transform}))
+
+(defn or+
+  ([xs] (or+ xs identity))
+  ([xs transform]
+   (when (and dev? (not (sequential? xs))) (println "Expected argument passed to or+ :" xs))
+   {:parser-node :or, :items xs, :transform transform}))
+
+(defn other-than+
+  ([items] (other-than+ items identity))
+  ([items transform]
+   (when (and dev? (not (or (string? items) (set? items))))
+     (println "Unexpected parameter passed to other-than+ :" items))
+   {:parser-node :other-than, :items items, :transform transform}))
+
+(defn resigter-custom-rule! [kind f]
+  (assert (keyword? kind) "expects kind in keyword")
+  (assert (fn? f) "expects parser rule in function")
+  (println "registering parser rule" kind)
+  (swap! *custom-methods assoc kind f))
 
 (defn some+
   ([x] (some+ x identity))
