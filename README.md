@@ -1,6 +1,6 @@
 ## Lilac parser
 
-> A toy combinator parser with better failure reasons.
+> A toy DSL-based combinator parser with better failure reasons.
 
 Online demo http://repo.mvc-works.org/lilac-parser/
 
@@ -11,13 +11,14 @@ Try with `(def a (add 1 2))` or `{"json": [1, 2]}`.
 [![Clojars Project](https://img.shields.io/clojars/v/mvc-works/lilac-parser.svg)](https://clojars.org/mvc-works/lilac-parser)
 
 ```edn
-[mvc-works/lilac-parser "0.0.3-a1"]
+[mvc-works/lilac-parser "0.0.3-a2"]
 ```
 
 ```clojure
 (require '[lilac-parser.core :refer
             [parse-lilac defparser is+ many+ one-of+ other-than+
-             some+ combine+ interleave+ label+]])
+             some+ combine+ interleave+ label+
+             replace-lilac]])
 
 (parse-lilac (string/split "aaaa" "") (many+ (is+ "a")))
 ```

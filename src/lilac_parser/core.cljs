@@ -2,7 +2,6 @@
 (ns lilac-parser.core
   (:require-macros [lilac-parser.core])
   (:require [clojure.string :as string]
-            [cirru-edn.core :as cirru-edn]
             [lilac-parser.config :refer [dev?]]
             [lilac-parser.util :refer [seq-strip-beginning]]))
 

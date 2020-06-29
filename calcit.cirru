@@ -85,13 +85,6 @@
                     |r $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1584185352414) (:text |:as) (:id |0NBEa5wh)
                     |v $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1584185353115) (:text |string) (:id |BoEcGb1zo)
                   :id |1pm5C9niW
-                |r $ {} (:type :expr) (:by |rJG4IHzWf) (:at 1584194957865)
-                  :data $ {}
-                    |T $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1584194959304) (:text |[]) (:id |T5z96MAZyleaf)
-                    |j $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1584194959784) (:text |cirru-edn.core) (:id |LV5ElYK1c)
-                    |r $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1584194968117) (:text |:as) (:id |_fRNYmiMi)
-                    |v $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1584194970676) (:text |cirru-edn) (:id |tdzxqJdHQ)
-                  :id |T5z96MAZy
                 |v $ {} (:type :expr) (:by |rJG4IHzWf) (:at 1588583714225)
                   :data $ {}
                     |T $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1588583714843) (:text |[]) (:id |8nhgzFWiZleaf)
