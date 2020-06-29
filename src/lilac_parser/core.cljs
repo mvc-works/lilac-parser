@@ -251,6 +251,25 @@
    :other-than parse-other-than,
    :label parse-label})
 
+(defn find-lilac
+  ([content rule] (find-lilac [] [] content rule))
+  ([acc attempts content rule]
+   (assert (sequential? content) "expects content in sequence")
+   (if (empty? content)
+     {:result acc, :attempts attempts}
+     (let [attempt (parse-lilac content rule)]
+       (if (:ok? attempt)
+         (recur
+          (conj
+           acc
+           {:content (->> (take (- (count content) (count (:rest attempt))) content)
+                          (string/join "")),
+            :value (:value attempt)})
+          (conj attempts attempt)
+          (:rest attempt)
+          rule)
+         (recur acc (conj attempts attempt) (rest content) rule))))))
+
 (defn indent+
   ([] (indent+ identity))
   ([transform] {:parser-node :indent, :transform transform}))
