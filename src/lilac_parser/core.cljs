@@ -294,6 +294,27 @@
      (println "Unexpected parameter passed to other-than+ :" items))
    {:parser-node :other-than, :items items, :transform transform}))
 
+(defn replace-lilac
+  ([content rule replacer] (replace-lilac "" [] content rule replacer))
+  ([acc attempts content rule replacer]
+   (assert (sequential? content) "expects content in sequence")
+   (if (empty? content)
+     {:result acc, :attempts attempts}
+     (let [attempt (parse-lilac content rule)]
+       (if (:ok? attempt)
+         (recur
+          (str acc (replacer (:value attempt)))
+          (conj attempts attempt)
+          (:rest attempt)
+          rule
+          replacer)
+         (recur
+          (str acc (first content))
+          (conj attempts attempt)
+          (rest content)
+          rule
+          replacer))))))
+
 (defn resigter-custom-rule! [kind f]
   (assert (keyword? kind) "expects kind in keyword")
   (assert (fn? f) "expects parser rule in function")

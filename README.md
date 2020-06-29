@@ -11,7 +11,7 @@ Try with `(def a (add 1 2))` or `{"json": [1, 2]}`.
 [![Clojars Project](https://img.shields.io/clojars/v/mvc-works/lilac-parser.svg)](https://clojars.org/mvc-works/lilac-parser)
 
 ```edn
-[mvc-works/lilac-parser "0.0.2-a3"]
+[mvc-works/lilac-parser "0.0.3-a1"]
 ```
 
 ```clojure
@@ -19,7 +19,7 @@ Try with `(def a (add 1 2))` or `{"json": [1, 2]}`.
             [parse-lilac defparser is+ many+ one-of+ other-than+
              some+ combine+ interleave+ label+]])
 
-(parse-lilac "aaaa" (many+ (is+ "a")))
+(parse-lilac (string/split "aaaa" "") (many+ (is+ "a")))
 ```
 
 Demo of a stupid S-expression parser:
@@ -150,6 +150,27 @@ Parser rules can be expected by injecting functions. It could be quite tricky an
   ; TODO
   )
 ```
+
+### Replacer
+
+A function is also provided for replacing text pieces matching a given rule:
+
+```clojure
+(replace-lilac (string/split content "") rule (fn [x] (str "<<<" x ">>>>")))
+```
+
+which returns `:result` as well as parsing details in `:attempts`:
+
+```edn
+{
+  :result "<<<MATCHED>>>>"
+  :attempts [
+    ; parsing summaries in vector
+  ]
+}
+```
+
+This is an experimental API serving jobs as a custom regular expression replacer.
 
 ### Workflow
 

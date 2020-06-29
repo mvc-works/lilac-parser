@@ -11,7 +11,17 @@
             [lilac-parser.config :refer [dev?]]
             [lilac-parser.core
              :refer
-             [parse-lilac defparser is+ combine+ some+ many+ optional+ or+ one-of+ some+]]
+             [parse-lilac
+              replace-lilac
+              defparser
+              is+
+              combine+
+              some+
+              many+
+              optional+
+              or+
+              one-of+
+              some+]]
             ["@mvc-works/codearea" :refer [codearea]]
             [clojure.string :as string]
             [cirru-edn.core :as cirru-edn]
@@ -159,8 +169,24 @@
          ((:show load-plugin)
           d!
           (fn [text]
-            (println "text" (read-string text))
-            (d! cursor (assoc state :result (read-string text))))))}))
+            (let [snapshot (read-string text)]
+              (comment println "text" snapshot)
+              (if (vector? snapshot)
+                (d! cursor (assoc state :result snapshot))
+                (d! cursor (assoc state :result snapshot)))))))})
+     (=< 16 nil)
+     (a
+      {:inner-text "Replacer",
+       :style ui/link,
+       :on-click (fn [e d!]
+         (let [result (replace-lilac
+                       (string/split (:code state) "")
+                       (s-expr-parser+)
+                       (fn [result]
+                         (println "replacing" result)
+                         (str "<<<" (pr-str result) ">>>")))]
+           (println (:result result))
+           (d! cursor (assoc state :result (:attempts result)))))}))
     (div
      {:style (merge ui/expand ui/row)}
      (textarea
@@ -172,7 +198,13 @@
      (if (:gui? state)
        (div
         {:style (merge ui/expand {:padding-bottom 400})}
-        (comp-node (>> states :tree-viewer) (:result state)))
+        (if (vector? (:result state))
+          (list->
+           {}
+           (->> (:result state)
+                (map-indexed
+                 (fn [idx value] [idx (comp-node (>> states (str :tree-viewer idx)) value)]))))
+          (comp-node (>> states :tree-viewer) (:result state))))
        (textarea
         {:style (merge
                  ui/expand
