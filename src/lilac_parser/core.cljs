@@ -2,7 +2,6 @@
 (ns lilac-parser.core
   (:require-macros [lilac-parser.core])
   (:require [clojure.string :as string]
-            [cirru-edn.core :as cirru-edn]
             [lilac-parser.config :refer [dev?]]
             [lilac-parser.util :refer [seq-strip-beginning]]))
 
@@ -293,6 +292,27 @@
    (when (and dev? (not (or (string? items) (set? items))))
      (println "Unexpected parameter passed to other-than+ :" items))
    {:parser-node :other-than, :items items, :transform transform}))
+
+(defn replace-lilac
+  ([content rule replacer] (replace-lilac "" [] content rule replacer))
+  ([acc attempts content rule replacer]
+   (assert (sequential? content) "expects content in sequence")
+   (if (empty? content)
+     {:result acc, :attempts attempts}
+     (let [attempt (parse-lilac content rule)]
+       (if (:ok? attempt)
+         (recur
+          (str acc (replacer (:value attempt)))
+          (conj attempts attempt)
+          (:rest attempt)
+          rule
+          replacer)
+         (recur
+          (str acc (first content))
+          (conj attempts attempt)
+          (rest content)
+          rule
+          replacer))))))
 
 (defn resigter-custom-rule! [kind f]
   (assert (keyword? kind) "expects kind in keyword")
