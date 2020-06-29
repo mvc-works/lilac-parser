@@ -13,6 +13,7 @@
              :refer
              [parse-lilac
               replace-lilac
+              find-lilac
               defparser
               is+
               combine+
@@ -184,9 +185,11 @@
                        (s-expr-parser+)
                        (fn [result]
                          (println "replacing" result)
-                         (str "<<<" (pr-str result) ">>>")))]
+                         (str "<<<" (pr-str result) ">>>")))
+               find-result (find-lilac (string/split (:code state) "") (s-expr-parser+))]
            (println (:result result))
-           (d! cursor (assoc state :result (:attempts result)))))}))
+           (d! cursor (assoc state :result (:attempts result)))
+           (println "Find results:" (pr-str (:result find-result)))))}))
     (div
      {:style (merge ui/expand ui/row)}
      (textarea

@@ -11,14 +11,14 @@ Try with `(def a (add 1 2))` or `{"json": [1, 2]}`.
 [![Clojars Project](https://img.shields.io/clojars/v/mvc-works/lilac-parser.svg)](https://clojars.org/mvc-works/lilac-parser)
 
 ```edn
-[mvc-works/lilac-parser "0.0.3-a3"]
+[mvc-works/lilac-parser "0.0.3-a4"]
 ```
 
 ```clojure
 (require '[lilac-parser.core :refer
             [parse-lilac defparser is+ many+ one-of+ other-than+
              some+ combine+ interleave+ label+
-             replace-lilac]])
+             replace-lilac find-lilac]])
 
 (parse-lilac (string/split "aaaa" "") (many+ (is+ "a")))
 ```
@@ -172,6 +172,12 @@ which returns `:result` as well as parsing details in `:attempts`:
 ```
 
 This is an experimental API serving jobs as a custom regular expression replacer.
+
+Similarly matched pieces can be collected with `find-lilac`:
+
+```clojure
+(find-lilac (string/split content "") rule)
+```
 
 ### Workflow
 
