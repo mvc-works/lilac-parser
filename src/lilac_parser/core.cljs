@@ -152,11 +152,12 @@
              :results acc,
              :peek-result result}))))))
 
-(defn parse-lilac [xs rule]
-  (assert (sequential? xs) "expected to parse from a sequence")
+(defn parse-lilac [x rule]
+  (assert (or (sequential? x) (string? x)) "expected to parse from a sequence or a string")
   (let [node (:parser-node rule)
         method (get core-methods node)
-        user-method (get @*custom-methods node)]
+        user-method (get @*custom-methods node)
+        xs (if (string? x) (string/split x "") x)]
     (cond
       (fn? method) (method xs rule)
       (fn? user-method) (user-method xs rule)
@@ -252,7 +253,8 @@
    :label parse-label})
 
 (defn find-lilac
-  ([content rule] (find-lilac [] [] content rule))
+  ([content rule]
+   (find-lilac [] [] (if (string? content) (string/split content "") content) rule))
   ([acc attempts content rule]
    (assert (sequential? content) "expects content in sequence")
    (if (empty? content)
@@ -313,7 +315,13 @@
    {:parser-node :other-than, :items items, :transform transform}))
 
 (defn replace-lilac
-  ([content rule replacer] (replace-lilac "" [] content rule replacer))
+  ([content rule replacer]
+   (replace-lilac
+    ""
+    []
+    (if (string? content) (string/split content "") content)
+    rule
+    replacer))
   ([acc attempts content rule replacer]
    (assert (sequential? content) "expects content in sequence")
    (if (empty? content)

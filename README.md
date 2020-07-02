@@ -11,7 +11,7 @@ Try with `(def a (add 1 2))` or `{"json": [1, 2]}`.
 [![Clojars Project](https://img.shields.io/clojars/v/mvc-works/lilac-parser.svg)](https://clojars.org/mvc-works/lilac-parser)
 
 ```edn
-[mvc-works/lilac-parser "0.0.3-a4"]
+[mvc-works/lilac-parser "0.0.3-a5"]
 ```
 
 ```clojure
@@ -157,7 +157,7 @@ Parser rules can be expected by injecting functions. It could be quite tricky an
 A function is also provided for replacing text pieces matching a given rule:
 
 ```clojure
-(replace-lilac (string/split content "") rule (fn [x] (str "<<<" x ">>>>")))
+(replace-lilac content rule (fn [x] (str "<<<" x ">>>>")))
 ```
 
 which returns `:result` as well as parsing details in `:attempts`:
@@ -176,7 +176,7 @@ This is an experimental API serving jobs as a custom regular expression replacer
 Similarly matched pieces can be collected with `find-lilac`:
 
 ```clojure
-(find-lilac (string/split content "") rule)
+(find-lilac content rule)
 ```
 
 ### Workflow
