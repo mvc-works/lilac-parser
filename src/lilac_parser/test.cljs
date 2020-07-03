@@ -13,7 +13,9 @@
               combine+
               optional+
               other-than+
-              or+]]))
+              or+
+              replace-lilac
+              find-lilac]]))
 
 (defn exactly-ok? [x] (and (:ok? x) (empty? (:rest x))))
 
@@ -32,6 +34,25 @@
  (testing
   "wrong order Of xy"
   (is (not-ok? (parse-lilac (list "x" "y") (combine+ [(is+ "y") (is+ "x")]))))))
+
+(deftest
+ test-find
+ (testing
+  (is
+   (=
+    2
+    (count
+     (:result (find-lilac "write cumulo and respo" (or+ [(is+ "cumulo") (is+ "respo")]))))))
+  (is
+   (=
+    1
+    (count
+     (:result (find-lilac "write cumulo and phlox" (or+ [(is+ "cumulo") (is+ "respo")]))))))
+  (is
+   (=
+    0
+    (count
+     (:result (find-lilac "write cumulo and phlox" (or+ [(is+ "cirru") (is+ "respo")]))))))))
 
 (deftest
  test-interleave
@@ -100,6 +121,26 @@
   "contains text other than abc"
   (is (roughly-ok? (parse-lilac (list "x" "y") (other-than+ "abc")))))
  (testing "a is in abc" (is (not-ok? (parse-lilac (list "a") (other-than+ "abc"))))))
+
+(deftest
+ test-replace
+ (testing
+  "replaced content"
+  (is
+   (=
+    "my project"
+    (:result
+     (replace-lilac "cumulo project" (or+ [(is+ "cumulo") (is+ "respo")]) (fn [x] "my")))))
+  (is
+   (=
+    "my project"
+    (:result
+     (replace-lilac "respo project" (or+ [(is+ "cumulo") (is+ "respo")]) (fn [x] "my")))))
+  (is
+   (=
+    "phlox project"
+    (:result
+     (replace-lilac "phlox project" (or+ [(is+ "cumulo") (is+ "respo")]) (fn [x] "my")))))))
 
 (deftest
  test-some

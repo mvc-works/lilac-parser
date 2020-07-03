@@ -1,4 +1,4 @@
-{:version "0.0.3-a4"
+{:version "0.0.3-a5"
  :group-id "mvc-works"
  :artifact-id "lilac-parser"
  :skip-tag true
