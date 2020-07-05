@@ -22,7 +22,8 @@
               optional+
               or+
               one-of+
-              some+]]
+              some+
+              unicode-range+]]
             ["@mvc-works/codearea" :refer [codearea]]
             [clojure.string :as string]
             [cirru-edn.core :as cirru-edn]
@@ -150,8 +151,9 @@
        :inner-text "Parse",
        :on-click (fn [e d!]
          (let [result (parse-lilac (string/split (:code state) "") (s-expr-parser+))
-               r1 (parse-lilac (string/split (:code state) "") (value-parser+))]
-           (d! cursor (assoc state :result r1))))})
+               r1 (parse-lilac (string/split (:code state) "") (value-parser+))
+               r2 (parse-lilac (:code state) (unicode-range+ 97 122))]
+           (d! cursor (assoc state :result result))))})
      (=< 16 nil)
      (span
       {:inner-text "GUI",

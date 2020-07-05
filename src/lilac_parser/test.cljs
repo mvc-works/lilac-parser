@@ -14,8 +14,12 @@
               optional+
               other-than+
               or+
+              unicode-range+
               replace-lilac
-              find-lilac]]))
+              find-lilac]]
+            [lilac-parser.preset
+             :refer
+             [lilac-digit lilac-alphabet lilac-comma-space lilac-chinese-char]]))
 
 (defn exactly-ok? [x] (and (:ok? x) (empty? (:rest x))))
 
@@ -123,6 +127,32 @@
  (testing "a is in abc" (is (not-ok? (parse-lilac (list "a") (other-than+ "abc"))))))
 
 (deftest
+ test-preset
+ (testing
+  "find alphabet"
+  (is (exactly-ok? (parse-lilac "a" lilac-alphabet)))
+  (is (exactly-ok? (parse-lilac "A" lilac-alphabet)))
+  (is (not-ok? (parse-lilac "." lilac-alphabet))))
+ (testing
+  "digits"
+  (is (exactly-ok? (parse-lilac "1" lilac-digit)))
+  (is (not-ok? (parse-lilac "a" lilac-digit))))
+ (testing
+  "comma with spaces"
+  (is (exactly-ok? (parse-lilac "," lilac-comma-space)))
+  (is (exactly-ok? (parse-lilac ", " lilac-comma-space)))
+  (is (exactly-ok? (parse-lilac " ," lilac-comma-space)))
+  (is (exactly-ok? (parse-lilac " , " lilac-comma-space)))
+  (is (exactly-ok? (parse-lilac "  , " lilac-comma-space)))
+  (is (not-ok? (parse-lilac "." lilac-comma-space))))
+ (testing
+  "chinese character"
+  (is (exactly-ok? (parse-lilac "汉" lilac-chinese-char)))
+  (is (not-ok? (parse-lilac "E" lilac-chinese-char)))
+  (is (not-ok? (parse-lilac "," lilac-chinese-char)))
+  (is (not-ok? (parse-lilac "，" lilac-chinese-char)))))
+
+(deftest
  test-replace
  (testing
   "replaced content"
@@ -151,3 +181,11 @@
   "contains multiple x"
   (is (roughly-ok? (parse-lilac (list "x" "x" "y") (some+ (is+ "x"))))))
  (testing "no x in y" (is (roughly-ok? (parse-lilac (list "y") (some+ (is+ "x")))))))
+
+(deftest
+ test-unicode-range
+ (testing
+  "parse by unicode"
+  (is (exactly-ok? (parse-lilac "a" (unicode-range+ 97 122))))
+  (is (exactly-ok? (parse-lilac "z" (unicode-range+ 97 122))))
+  (is (not-ok? (parse-lilac "A" (unicode-range+ 97 122))))))
