@@ -1,6 +1,9 @@
 
 {
   :paths ["src" "macros"]
+  :deps {
+    org.clojure/core.incubator {:mvn/version "0.1.4"}
+  }
   :aliases {
     :release {
       :extra-deps {

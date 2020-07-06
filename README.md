@@ -48,18 +48,19 @@ Demo of a stupid S-expression parser:
 
 ### Rules
 
-| Rule          | Example                                         | Description                                |
-| ------------- | ----------------------------------------------- | ------------------------------------------ |
-| `is+`         | `(is+ "a")` or `(is+ "abc")`                    | matches a piece of string                  |
-| `one-of+`     | `(one-of+ "abc")` or `(one-of+ #{"a" "b" "c"})` | matches a character in one of candidates   |
-| `other-than+` | `(other-than+ "abc")`                           | matches a character that is not listed     |
-| `optional+`   | `(optional+ (is+ "a"))`                         | matching or nothing                        |
-| `some+`       | `(some+ (is+ "a"))`                             | matches 0 or more items                    |
-| `many+`       | `(many+ (is+ "a"))`                             | matches 1 or more items                    |
-| `or+`         | `(or+ [(is+ "a") (is+ "b")])`                   | matches one among listed items             |
-| `combine+`    | `(combine+ [(is+ "a") (is+ "b")])`              | matches items in ecxact order              |
-| `interleave+` | `(interleave+ (is+ "a") (is+ ","))`             | matches two interleaving items             |
-| `label+`      | `(label+ "just a" (is+ "a"))`                   | simpler rule for adding comments in result |
+| Rule             | Example                                         | Description                                |
+| ---------------- | ----------------------------------------------- | ------------------------------------------ |
+| `is+`            | `(is+ "a")` or `(is+ "abc")`                    | matches a piece of string                  |
+| `one-of+`        | `(one-of+ "abc")` or `(one-of+ #{"a" "b" "c"})` | matches a character in one of candidates   |
+| `other-than+`    | `(other-than+ "abc")`                           | matches a character that is not listed     |
+| `optional+`      | `(optional+ (is+ "a"))`                         | matching or nothing                        |
+| `some+`          | `(some+ (is+ "a"))`                             | matches 0 or more items                    |
+| `many+`          | `(many+ (is+ "a"))`                             | matches 1 or more items                    |
+| `or+`            | `(or+ [(is+ "a") (is+ "b")])`                   | matches one among listed items             |
+| `combine+`       | `(combine+ [(is+ "a") (is+ "b")])`              | matches items in ecxact order              |
+| `interleave+`    | `(interleave+ (is+ "a") (is+ ","))`             | matches two interleaving items             |
+| `label+`         | `(label+ "just a" (is+ "a"))`                   | simpler rule for adding comments in result |
+| `unicode-range+` | `(unicode-range+ 97 122)`                       | matches a with unicode in between given    |
 
 ### `defparser`
 
@@ -136,6 +137,15 @@ lilac-parser would be pretter slow since it tries to store all information durin
 }
 </code></pre>
 </details>
+
+### Preset rules
+
+Under `lilac-parser.preset`:
+
+- `lilac-digit` matches `\d`
+- `lilac-alphabet` matches `[a-zA-Z]`
+- `lilac-chinese-char` matches `[\u4e00-\u9fa5]`
+- `lilac-comma-space` matches `\s*\,\s*`
 
 ### Custom Rule
 

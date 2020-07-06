@@ -1,6 +1,6 @@
 
 (ns lilac-parser.core
-  (:require-macros [lilac-parser.core])
+  (:require-macros [lilac-parser.core] [clojure.core.strint :refer [<<]])
   (:require [clojure.string :as string]
             [lilac-parser.config :refer [dev?]]
             [lilac-parser.util :refer [seq-strip-beginning]]))
@@ -90,6 +90,25 @@
          :value (if (some? transform) (transform x0) x0),
          :rest (rest xs),
          :parser-node :other-than}))))
+
+(defn parse-unicode-range [xs rule]
+  (js-debugger)
+  (if (empty? xs)
+    {:ok? false, :message "unexpected EOF", :parser-node :unicode-range, :rest xs}
+    (let [min-code (:min-code rule)
+          max-code (:max-code rule)
+          transform (:transform rule)
+          head-code (.charCodeAt (first xs) 0)]
+      (if (and (>= head-code min-code) (<= head-code max-code))
+        {:ok? true,
+         :value (let [v (first xs)] (if (some? transform) (transform v) v)),
+         :rest (rest xs),
+         :parser-node :unicode-range}
+        {:ok? false,
+         :message (<<
+                   "~(pr-str (first xs)) of code ~{head-code} is not in between [~{min-code}, ~{max-code}]."),
+         :parser-node :unicode-range,
+         :rest xs}))))
 
 (defn parse-some [xs0 rule]
   (let [item (:item rule), transform (:transform rule)]
@@ -250,7 +269,8 @@
    :one-of parse-one-of,
    :interleave parse-interleave,
    :other-than parse-other-than,
-   :label parse-label})
+   :label parse-label,
+   :unicode-range parse-unicode-range})
 
 (defn find-lilac
   ([content rule]
@@ -350,5 +370,13 @@
 (defn some+
   ([x] (some+ x identity))
   ([x transform] {:parser-node :some, :item x, :transform transform}))
+
+(defn unicode-range+
+  ([min-code max-code] (unicode-range+ min-code max-code identity))
+  ([min-code max-code transform]
+   {:parser-node :unicode-range,
+    :min-code min-code,
+    :max-code max-code,
+    :transform transform}))
 
 (defn unindent+ [] {:parser-node :unindent})
