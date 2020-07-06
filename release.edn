@@ -1,6 +1,7 @@
-{:version "0.0.3-a6"
- :group-id "mvc-works"
- :artifact-id "lilac-parser"
- :skip-tag true
- :description "A toy combinator parser with more failure details"
+{:version "0.0.3",
+ :group-id "mvc-works",
+ :artifact-id "lilac-parser",
+ :skip-tag true,
+ :description "A toy combinator parser with more failure details",
  :scm-url "https://github.com/mvc-works/lilac-parser"}
+
