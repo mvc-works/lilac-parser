@@ -29,15 +29,13 @@
 
 (deftest
  test-combine
- (testing
-  "is xy"
-  (is (exactly-ok? (parse-lilac (list "x" "y") (combine+ [(is+ "x") (is+ "y")])))))
+ (testing "is xy" (is (exactly-ok? (parse-lilac "xy" (combine+ [(is+ "x") (is+ "y")])))))
  (testing
   "contains xy"
-  (is (roughly-ok? (parse-lilac (list "x" "y" "z") (combine+ [(is+ "x") (is+ "y")])))))
+  (is (roughly-ok? (parse-lilac "xyz" (combine+ [(is+ "x") (is+ "y")])))))
  (testing
   "wrong order Of xy"
-  (is (not-ok? (parse-lilac (list "x" "y") (combine+ [(is+ "y") (is+ "x")]))))))
+  (is (not-ok? (parse-lilac "xy" (combine+ [(is+ "y") (is+ "x")]))))))
 
 (deftest
  test-find
@@ -62,69 +60,63 @@
  test-interleave
  (testing
   "repeat xy"
-  (is (exactly-ok? (parse-lilac (list "x" "y") (interleave+ (is+ "x") (is+ "y"))))))
+  (is (exactly-ok? (parse-lilac "xy" (interleave+ (is+ "x") (is+ "y"))))))
  (testing
   "repeat xy of 3"
-  (is (exactly-ok? (parse-lilac (list "x" "y" "x") (interleave+ (is+ "x") (is+ "y"))))))
+  (is (exactly-ok? (parse-lilac "xyx" (interleave+ (is+ "x") (is+ "y"))))))
  (testing
   "repeat xy of 4"
-  (is (exactly-ok? (parse-lilac (list "x" "y" "x" "y") (interleave+ (is+ "x") (is+ "y"))))))
+  (is (exactly-ok? (parse-lilac "xyxy" (interleave+ (is+ "x") (is+ "y"))))))
  (testing
   "repeat xy wrong"
-  (is (not-ok? (parse-lilac (list "y" "x" "y") (interleave+ (is+ "x") (is+ "y")))))))
+  (is (not-ok? (parse-lilac "yxy" (interleave+ (is+ "x") (is+ "y")))))))
 
 (deftest
  test-is
- (testing "is x" (is (exactly-ok? (parse-lilac (list "x") (is+ "x")))))
- (testing "is xyx" (is (exactly-ok? (parse-lilac (list "x" "y" "z") (is+ "xyz")))))
- (testing "has x" (is (roughly-ok? (parse-lilac (list "x" "y") (is+ "x")))))
+ (testing "is x" (is (exactly-ok? (parse-lilac "x" (is+ "x")))))
+ (testing "is xyx" (is (exactly-ok? (parse-lilac "xyz" (is+ "xyz")))))
+ (testing "has x" (is (roughly-ok? (parse-lilac "xy" (is+ "x")))))
  (testing
   "roughly ok is not same as exactly ok"
-  (is (not (exactly-ok? (parse-lilac (list "x" "y") (is+ "x"))))))
- (testing "is not x" (is (not-ok? (parse-lilac (list "y") (is+ "x"))))))
+  (is (not (exactly-ok? (parse-lilac "xy" (is+ "x"))))))
+ (testing "is not x" (is (not-ok? (parse-lilac "y" (is+ "x"))))))
 
 (deftest
  test-many
- (testing "an x" (is (exactly-ok? (parse-lilac (list "x") (many+ (is+ "x"))))))
- (testing "two xs" (is (exactly-ok? (parse-lilac (list "x" "x") (many+ (is+ "x"))))))
- (testing "many xs" (is (exactly-ok? (parse-lilac (list "x" "x" "x") (many+ (is+ "x"))))))
- (testing
-  "contains many xs"
-  (is (roughly-ok? (parse-lilac (list "x" "x" "x" "y") (many+ (is+ "x")))))))
+ (testing "an x" (is (exactly-ok? (parse-lilac "x" (many+ (is+ "x"))))))
+ (testing "two xs" (is (exactly-ok? (parse-lilac "xx" (many+ (is+ "x"))))))
+ (testing "many xs" (is (exactly-ok? (parse-lilac "xxx" (many+ (is+ "x"))))))
+ (testing "contains many xs" (is (roughly-ok? (parse-lilac "xxxy" (many+ (is+ "x")))))))
 
 (deftest
  test-oneof
  (testing
   "x/y/z is one of xyz"
-  (is (exactly-ok? (parse-lilac (list "x") (one-of+ "xyz"))))
-  (is (exactly-ok? (parse-lilac (list "y") (one-of+ "xyz"))))
-  (is (exactly-ok? (parse-lilac (list "z") (one-of+ "xyz")))))
- (testing "w is not one of xyz" (is (not-ok? (parse-lilac (list "w") (one-of+ "xyz")))))
- (testing
-  "xy has one of xyz"
-  (is (roughly-ok? (parse-lilac (list "x" "y") (one-of+ "xyz"))))))
+  (is (exactly-ok? (parse-lilac "x" (one-of+ "xyz"))))
+  (is (exactly-ok? (parse-lilac "y" (one-of+ "xyz"))))
+  (is (exactly-ok? (parse-lilac "z" (one-of+ "xyz")))))
+ (testing "w is not one of xyz" (is (not-ok? (parse-lilac "w" (one-of+ "xyz")))))
+ (testing "xy has one of xyz" (is (roughly-ok? (parse-lilac "xy" (one-of+ "xyz"))))))
 
 (deftest
  test-optional
- (testing "optional x" (is (exactly-ok? (parse-lilac (list "x") (optional+ (is+ "x"))))))
- (testing "optional nil x" (is (exactly-ok? (parse-lilac (list) (optional+ (is+ "x"))))))
- (testing
-  "x for optional y"
-  (is (roughly-ok? (parse-lilac (list "x") (optional+ (is+ "y")))))))
+ (testing "optional x" (is (exactly-ok? (parse-lilac "x" (optional+ (is+ "x"))))))
+ (testing "optional nil x" (is (exactly-ok? (parse-lilac "" (optional+ (is+ "x"))))))
+ (testing "x for optional y" (is (roughly-ok? (parse-lilac "x" (optional+ (is+ "y")))))))
 
 (deftest
  test-or
- (testing "x or y" (is (exactly-ok? (parse-lilac (list "x") (or+ [(is+ "x") (is+ "y")])))))
- (testing "x or y" (is (exactly-ok? (parse-lilac (list "y") (or+ [(is+ "x") (is+ "y")])))))
- (testing "z is x or y" (is (not-ok? (parse-lilac (list "z") (or+ [(is+ "x") (is+ "y")]))))))
+ (testing "x or y" (is (exactly-ok? (parse-lilac "x" (or+ [(is+ "x") (is+ "y")])))))
+ (testing "x or y" (is (exactly-ok? (parse-lilac "y" (or+ [(is+ "x") (is+ "y")])))))
+ (testing "z is x or y" (is (not-ok? (parse-lilac "z" (or+ [(is+ "x") (is+ "y")]))))))
 
 (deftest
  test-other-than
- (testing "other than abc" (is (exactly-ok? (parse-lilac (list "x") (other-than+ "abc")))))
+ (testing "other than abc" (is (exactly-ok? (parse-lilac "x" (other-than+ "abc")))))
  (testing
   "contains text other than abc"
-  (is (roughly-ok? (parse-lilac (list "x" "y") (other-than+ "abc")))))
- (testing "a is in abc" (is (not-ok? (parse-lilac (list "a") (other-than+ "abc"))))))
+  (is (roughly-ok? (parse-lilac "xy" (other-than+ "abc")))))
+ (testing "a is in abc" (is (not-ok? (parse-lilac "a" (other-than+ "abc"))))))
 
 (deftest
  test-preset
@@ -174,13 +166,11 @@
 
 (deftest
  test-some
- (testing "no x" (is (exactly-ok? (parse-lilac (list) (some+ (is+ "x"))))))
- (testing "an x" (is (exactly-ok? (parse-lilac (list "x") (some+ (is+ "x"))))))
- (testing "multiple x" (is (exactly-ok? (parse-lilac (list "x" "x") (some+ (is+ "x"))))))
- (testing
-  "contains multiple x"
-  (is (roughly-ok? (parse-lilac (list "x" "x" "y") (some+ (is+ "x"))))))
- (testing "no x in y" (is (roughly-ok? (parse-lilac (list "y") (some+ (is+ "x")))))))
+ (testing "no x" (is (exactly-ok? (parse-lilac "" (some+ (is+ "x"))))))
+ (testing "an x" (is (exactly-ok? (parse-lilac "x" (some+ (is+ "x"))))))
+ (testing "multiple x" (is (exactly-ok? (parse-lilac "xx" (some+ (is+ "x"))))))
+ (testing "contains multiple x" (is (roughly-ok? (parse-lilac "xxy" (some+ (is+ "x"))))))
+ (testing "no x in y" (is (roughly-ok? (parse-lilac "y" (some+ (is+ "x")))))))
 
 (deftest
  test-unicode-range
